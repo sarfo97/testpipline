@@ -42,7 +42,7 @@ jobs:
 
     - name: Configure kubectl
       run: |
-       gcloud container clusters get-credentials autopilot-cluster-1 --region us-central1 --project constant-tracer-434122-q2
+        gcloud container clusters get-credentials autopilot-cluster-1 --region us-central1 --project ${{ secrets.GCP_PROJECT_ID }}
       
     - name: List files for debugging
       run: ls -R $GITHUB_WORKSPACE
