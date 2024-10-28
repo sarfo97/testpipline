@@ -1,55 +1,63 @@
-name: CI/CD Pipeline for FastAPI on GKE
+name: Build and Deploy to GKE
 
 on:
   push:
     branches:
-      - master
+      - maater
+
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  GKE_CLUSTER: autopilot-cluster-1    # cluster name
+  GKE_ZONE:  us-central1  # cluster zone
+  IMAGE: fastapi-k8s # image name
+  IMAGE_TAG: latest # image tag
+  GAR_ZONE: us-central1 # artifact registry zone
+  GAR_REPO: fastai # artifact registry repository
 
 jobs:
-  build:
+  setup-build-publish-deploy:
+    name: Setup, Build, Publish, and Deploy
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v3
 
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
-        with:
-          project_id: ${{ secrets.GCP_PROJECT }}
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+    # Setup gcloud CLI
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: '${{ secrets.GKE_SA_KEY }}'
 
-      - name: Configure Docker to use Google Cloud credentials
-        run: gcloud auth configure-docker
+    # Configure Docker to use the gcloud command-line tool as a credential
+    # helper for authentication
+    - name: Docker configuration
+      run: |-
+        gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://$GAR_ZONE-docker.pkg.dev
 
-      - name: Build and push Docker image to Google Container Registry
-        run: |
-          IMAGE=gcr.io/${{ secrets.GCP_PROJECT }}/fastapi-app:${{ github.sha }}
-          docker build -t $IMAGE .
-          docker push $IMAGE
-        env:
-          IMAGE_TAG: ${{ github.sha }}
+    # Get the GKE credentials so we can deploy to the cluster
+    - name: Set up GKE credentials
+      uses: google-github-actions/get-gke-credentials@v1
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER }}
+        location: ${{ env.GKE_ZONE }}
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
+    # Build the Docker image
+    - name: Build
+      run: |-
+        docker build \
+          --tag "$GAR_ZONE-docker.pkg.dev/$PROJECT_ID/$GAR_REPO/$IMAGE:$IMAGE_TAG" \
+          --build-arg GITHUB_SHA="$GITHUB_SHA" \
+          --build-arg GITHUB_REF="$GITHUB_REF" \
+          .
+    # Push the Docker image to Google Container Registry
+    - name: Publish
+      run: |-
+        docker push "$GAR_ZONE-docker.pkg.dev/$PROJECT_ID/$GAR_REPO/$IMAGE:$IMAGE_TAG"
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
-        with:
-          project_id: ${{ secrets.GCP_PROJECT }}
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-
-      - name: Connect to GKE cluster
-        run: |
-          gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} --zone ${{ secrets.GKE_ZONE }} --project ${{ secrets.GCP_PROJECT }}
-
-      - name: Deploy to GKE
-        run: |
-          kubectl set image deployment/fastapi-app fastapi-container=gcr.io/${{ secrets.GCP_PROJECT }}/fastapi-app:${{ github.sha }}
-          kubectl apply -f k8s-deployment.yaml
-         
+    # Deploy the Docker image to the GKE cluster
+    - name: Deploy
+      run: |-
+        kubectl apply -f k8s-deployment.yml
+        kubectl get pods
