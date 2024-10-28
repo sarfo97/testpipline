@@ -11,12 +11,12 @@ spec:
     metadata:
       labels:
         app: fastapi-microservice
-  spec:
+    spec:  
       containers:
-      - name: fastapi-microservice
-        image: sarfo97/fastapi-microservice:latest
-        ports:
-        - containerPort: 80
+        - name: fastapi-microservice
+          image: us-central1-docker.pkg.dev/fastai/fastapi-k8s:latest
+          ports:
+            - containerPort: 80
 
 ---
 apiVersion: v1
