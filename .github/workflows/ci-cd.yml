@@ -10,7 +10,7 @@ env:
   GKE_CLUSTER: autopilot-cluster-1    # cluster name
   GKE_ZONE:  us-central1  # cluster zone
   IMAGE: fastapi-k8s # image name
-  IMAGE_TAG: latest # image tag
+  IMAGE_TAG: test # image tag
   GAR_ZONE: us-central1 # artifact registry zone
   GAR_REPO: fastapi # artifact registry repository
 
