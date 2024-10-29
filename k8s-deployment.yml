@@ -32,7 +32,7 @@ kind: Service
 metadata:
   name: fastapi-microservice-service
 spec:
-  type: Cluster IP
+  type: ClusterIP
   selector:
     app: fastapi-microservice
   ports:
