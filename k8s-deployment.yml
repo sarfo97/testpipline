@@ -16,7 +16,7 @@ spec:
         - name: fastapi-microservice
           image: us-central1-docker.pkg.dev/fastapi/fastapi-k8s:latest
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           resources:
             requests:
               memory: "256Mi"  # Adjust based on app needs
@@ -32,10 +32,10 @@ kind: Service
 metadata:
   name: fastapi-microservice-service
 spec:
-  type: LoadBalancer
+  type: Cluster IP
   selector:
     app: fastapi-microservice
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 80
+      port: 8080
+      targetPort: 8080
