@@ -3,7 +3,7 @@ name: DEV - Deploy to GCP Kubernetes
 on:
   push:
     branches:
-      - main
+      - master
 
 env:
   GCP_PROJECT_ID: constant-tracer-434122-q2
