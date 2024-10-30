@@ -68,9 +68,5 @@ jobs:
 
       - name: Deploy to GKE
         run: |
-          kubectl apply -f k8s-deployment.yml
-          kubectl rollout restart deployment worker
+          kubectl apply -f k8s-deployment.yaml
 
-      - name: Wait for Deployment Rollout
-        run: |
-          kubectl rollout status deployment/worker --timeout=120s
