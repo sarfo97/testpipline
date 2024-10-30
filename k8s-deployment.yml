@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: fastapi-microservice
-          image: us-central1-docker.pkg.dev/constant-tracer-434122-q2/fastapi/fastapi-k8s:test
+          image: sarfo97/fastapi-k8s 
           ports:
             - containerPort: 8080
           resources:
