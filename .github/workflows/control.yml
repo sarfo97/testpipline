@@ -41,5 +41,5 @@ jobs:
 
       - name: Deploy to GKE
         run: |
-          kubectl set image deployment/your-deployment-name \
+          kubectl set image deployment/k8s-deployment.yml \
           your-container-name=${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
